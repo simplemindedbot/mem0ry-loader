@@ -169,4 +169,4 @@ models/
 # Data directories
 data/
 datasets/
-conversations/
+conversations/.env
