@@ -22,9 +22,26 @@ git clone https://github.com/your-username/memloader.git
 cd memloader
 ```
 
-### 2. Install Dependencies
+### 2. Set Up Python Environment
 ```bash
+# Create virtual environment
+python -m venv memloader-env
+
+# Activate virtual environment
+# On macOS/Linux:
+source memloader-env/bin/activate
+# On Windows:
+# memloader-env\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
+```
+
+**Note**: Always activate the virtual environment before running MemLoader:
+```bash
+source memloader-env/bin/activate  # macOS/Linux
+# or
+memloader-env\Scripts\activate     # Windows
 ```
 
 ### 3. Choose Your LLM Provider
@@ -322,6 +339,18 @@ curl -H "Authorization: Bearer $OPENAI_API_KEY" \
 - **Memory issues**: Reduce `MEMLOADER_CHUNK_SIZE` for very large conversations
 - **Long processing times**: Consider using `--use-batch` with OpenAI for large datasets
 
+### Python Environment Issues
+- **Module not found errors**: Ensure virtual environment is activated
+- **Permission errors**: Use virtual environment instead of system Python
+- **Dependency conflicts**: Create fresh virtual environment if needed
+```bash
+# Recreate virtual environment
+rm -rf memloader-env
+python -m venv memloader-env
+source memloader-env/bin/activate
+pip install -r requirements.txt
+```
+
 ## 🤝 Contributing
 
 We welcome contributions! Here's how:
@@ -334,8 +363,14 @@ We welcome contributions! Here's how:
 
 ### Development Setup
 ```bash
+# Set up development environment
+python -m venv memloader-dev
+source memloader-dev/bin/activate  # macOS/Linux
+# or memloader-dev\Scripts\activate  # Windows
+
 # Install dev dependencies
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
+# pip install -r requirements-dev.txt  # if available
 
 # Run tests
 pytest tests/
