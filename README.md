@@ -303,6 +303,37 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Data Privacy
 While this tool includes privacy-focused local processing options, **you are responsible for ensuring compliance with your organization's data policies and applicable privacy regulations** when processing conversation data.
 
+### Third-Party Terms of Service
+**You must comply with all applicable third-party terms of service**, including but not limited to:
+- **OpenAI Terms of Service** - When using OpenAI APIs or processing ChatGPT data
+- **ChatGPT Terms of Use** - When exporting and processing your conversation data
+- **Mem0 Terms of Service** - When using Mem0 platform features
+- **Local regulations** - Regarding AI, data processing, and privacy
+
+**It is your responsibility to ensure you have proper licenses and permissions for all services used.**
+
+### Security Considerations
+**Protect your API keys and sensitive data:**
+- Never commit API keys to version control
+- Use environment variables for all credentials
+- Review the .gitignore file before committing changes
+- Consider using API key rotation for production deployments
+- Be aware that conversation data may contain sensitive personal information
+
+### No Affiliation Disclaimer
+**MemLoader is an independent open-source project** and is not affiliated with, endorsed by, or sponsored by OpenAI, ChatGPT, Mem0, or any other third-party service providers. All trademarks are the property of their respective owners.
+
+### Experimental Software
+**This is experimental software** that may contain bugs, security vulnerabilities, or incomplete features. Use at your own risk and thoroughly test before any production deployment. We recommend starting with small datasets and dry-run mode.
+
+### Responsible Use
+**Please use this software responsibly:**
+- **Commercial Use**: While the MIT license permits commercial use, evaluate all third-party API terms and costs for business deployments
+- **Rate Limiting**: Respect API rate limits to avoid service interruptions or account restrictions
+- **Data Retention**: Consider implementing data retention and deletion policies for processed conversation data
+- **Testing**: Always test with small datasets first, especially when using new models or configurations
+- **Monitoring**: Monitor API usage and costs to avoid unexpected charges
+
 ## 📞 Support
 
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/yourusername/memloader/issues)
