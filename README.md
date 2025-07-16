@@ -280,6 +280,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **[OpenAI](https://openai.com/)** - GPT models and batch processing
 - **NuExtract** - Specialized extraction model
 
+## ⚠️ Important Disclaimers
+
+### Cost Responsibility
+**All API usage costs are the sole responsibility of the end user.** Cost estimates provided in this documentation are approximations based on limited testing and may not reflect actual usage costs in your specific environment. Costs may vary significantly based on:
+- Conversation length and complexity
+- Model selection and pricing changes
+- API rate limits and retry logic
+- Regional pricing differences
+
+**Simplemindedbot and Scot Campbell are not responsible for any API charges incurred through the use of this software.**
+
+### Performance Metrics
+**All performance metrics and processing statistics are based on limited datasets and may not reflect real-world scenarios.** Actual results may vary based on:
+- Conversation content and structure
+- Hardware specifications (for local processing)
+- Network conditions and API response times
+- Model performance variations
+
+**Use provided benchmarks as general guidance only, not as guaranteed performance metrics.**
+
+### Data Privacy
+While this tool includes privacy-focused local processing options, **you are responsible for ensuring compliance with your organization's data policies and applicable privacy regulations** when processing conversation data.
+
 ## 📞 Support
 
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/yourusername/memloader/issues)
