@@ -9,7 +9,7 @@ Transform your ChatGPT conversation history into persistent, intelligent memorie
 - **💰 Cost Optimization**: OpenAI batch processing for 50% cost savings
 - **🧠 Intelligent Memory Processing**: Deduplication, confidence filtering, and categorization
 - **🔄 Mem0 Integration**: Seamless upload to Mem0 platform with full metadata
-- **🏠 Self-Hosted Option**: Complete local processing with privacy-first approach
+- **🏠 Local Processing**: Complete local LLM processing with privacy-first approach
 - **📈 Analytics & Insights**: Detailed processing statistics and confidence metrics
 - **🛡️ Dry-Run Mode**: Test processing without uploading to validate results
 
@@ -192,15 +192,19 @@ Confidence Statistics:
 
 ## 🔧 Advanced Usage
 
-### Self-Hosted to Cloud Migration
+### Local Processing with Cloud Storage
 ```bash
-# 1. Start with self-hosted processing
+# 1. Test locally without uploading
 python main.py conversations.json --dry-run
 
-# 2. When ready, export and migrate
-# (Uses Mem0's memory export API)
+# 2. Process locally, upload to Mem0 cloud
 python main.py conversations.json --mem0-api-key your_key
+
+# 3. Use OpenAI batch processing for cost savings
+python main.py conversations.json --use-batch --mem0-api-key your_key
 ```
+
+**Note**: Currently, memory storage only supports Mem0's cloud platform. Self-hosted memory storage is planned for future releases (see NEXTSTEPS.md).
 
 ### Environment Variables
 ```bash
