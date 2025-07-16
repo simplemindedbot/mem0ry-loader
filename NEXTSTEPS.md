@@ -13,6 +13,7 @@ This document outlines immediate next steps for users and potential future enhan
 ### 2. Production Deployment Decision
 - [ ] **Self-hosted evaluation**: Test local Ollama processing for privacy/cost benefits
 - [ ] **Cloud evaluation**: Test OpenAI batch processing for speed/scale benefits
+- [ ] **Complete self-hosting**: Set up OpenMemory for local memory storage
 - [ ] **Hybrid approach**: Use self-hosted for initial processing, cloud for final cleanup
 - [ ] **Cost analysis**: Compare actual costs vs. estimates for your data volume
 

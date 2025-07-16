@@ -19,6 +19,7 @@ from src.extractors.ollama_extractor import OllamaExtractor
 from src.extractors.openai_extractor import OpenAIExtractor
 from src.processors.memory_processor import MemoryProcessor
 from src.loaders.mem0_loader import Mem0Loader
+from src.loaders.local_mem0_loader import LocalMem0Loader
 from src.config.settings import settings, LLMProvider
 
 
@@ -39,17 +40,20 @@ def setup_logging(verbose: bool = False):
 @click.command()
 @click.argument('export_file', type=click.Path(exists=True, path_type=Path))
 @click.option('--mem0-api-key', help='Mem0 API key (or set MEM0_API_KEY env var)')
-@click.option('--user-id', default='chatgpt_import', help='User ID for Mem0 memories')
-@click.option('--model', default='nuextract', help='Ollama model to use')
-@click.option('--confidence-threshold', default=0.7, type=float, help='Minimum confidence for memories')
-@click.option('--batch-size', default=100, type=int, help='Batch size for Mem0 uploads')
+@click.option('--user-id', help='User ID for Mem0 memories (overrides .env setting)')
+@click.option('--model', help='Ollama model to use (overrides .env setting)')
+@click.option('--confidence-threshold', type=float, help='Minimum confidence for memories (overrides .env setting)')
+@click.option('--batch-size', type=int, help='Batch size for Mem0 uploads (overrides .env setting)')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
 @click.option('--dry-run', is_flag=True, help='Process but don\'t upload to Mem0')
 @click.option('--clear-existing', is_flag=True, help='Clear existing memories before upload')
 @click.option('--use-batch', is_flag=True, help='Use OpenAI batch processing (50% cost savings)')
-def main(export_file: Path, mem0_api_key: Optional[str], user_id: str, 
-         model: str, confidence_threshold: float, batch_size: int, 
-         verbose: bool, dry_run: bool, clear_existing: bool, use_batch: bool):
+@click.option('--local-server', is_flag=True, help='Use local OpenMemory server instead of cloud')
+@click.option('--provider', type=click.Choice(['ollama', 'openai']), help='LLM provider to use (overrides .env setting)')
+def main(export_file: Path, mem0_api_key: Optional[str], user_id: Optional[str], 
+         model: Optional[str], confidence_threshold: Optional[float], batch_size: Optional[int], 
+         verbose: bool, dry_run: bool, clear_existing: bool, use_batch: bool,
+         local_server: bool, provider: Optional[str]):
     """Extract memories from ChatGPT export and load into Mem0.
     
     EXPORT_FILE: Path to the ChatGPT conversations.json file
@@ -61,14 +65,35 @@ def main(export_file: Path, mem0_api_key: Optional[str], user_id: str,
     setup_logging(verbose)
     logger = logging.getLogger(__name__)
     
-    # Update settings
-    settings.confidence_threshold = confidence_threshold
-    settings.batch_size = batch_size
+    # Apply command line overrides or use .env defaults
+    if confidence_threshold is not None:
+        settings.confidence_threshold = confidence_threshold
+        logger.info(f"Using confidence threshold from command line: {confidence_threshold}")
+    else:
+        logger.info(f"Using confidence threshold from .env: {settings.confidence_threshold}")
+    
+    if batch_size is not None:
+        settings.batch_size = batch_size
+        logger.info(f"Using batch size from command line: {batch_size}")
+    else:
+        logger.info(f"Using batch size from .env: {settings.batch_size}")
+    
+    # Override provider if specified via command line
+    if provider:
+        settings.llm_provider = LLMProvider(provider)
+        logger.info(f"Using LLM provider from command line: {provider}")
+    else:
+        logger.info(f"Using LLM provider from .env: {settings.llm_provider}")
+    
+    # Set user_id and model, using .env defaults if not provided
+    final_user_id = user_id or os.getenv('USER', 'default_user')
+    final_model = model or settings.ollama_model
     
     # Use provided API key or environment variable
     api_key = mem0_api_key or os.getenv('MEM0_API_KEY')
-    if not api_key and not dry_run:
+    if not api_key and not dry_run and not local_server:
         click.echo("Error: Mem0 API key is required. Set MEM0_API_KEY environment variable or use --mem0-api-key option.")
+        click.echo("Alternatively, use --local-server to use local OpenMemory server (no API key required).")
         sys.exit(1)
     
     try:
@@ -81,12 +106,17 @@ def main(export_file: Path, mem0_api_key: Optional[str], user_id: str,
         if settings.llm_provider == LLMProvider.OPENAI:
             extractor = OpenAIExtractor(model=settings.openai_model, use_batch=use_batch)
         else:
-            extractor = OllamaExtractor(model=model)
+            extractor = OllamaExtractor(model=final_model)
             
-        processor = MemoryProcessor(confidence_threshold=confidence_threshold)
+        processor = MemoryProcessor(confidence_threshold=settings.confidence_threshold)
         
         if not dry_run:
-            loader = Mem0Loader(api_key=api_key, user_id=user_id)
+            if local_server:
+                loader = LocalMem0Loader(user_id=final_user_id)
+                click.echo("Using local OpenMemory server")
+            else:
+                loader = Mem0Loader(api_key=api_key, user_id=final_user_id)
+                click.echo("Using Mem0 cloud platform")
             
             # Clear existing memories if requested
             if clear_existing:
@@ -198,7 +228,7 @@ Confidence Statistics:
             
             if upload_ready_memories:
                 # Upload memories
-                upload_stats = loader.load_memories(upload_ready_memories, batch_size)
+                upload_stats = loader.load_memories(upload_ready_memories, settings.batch_size)
                 
                 click.echo(f"""
 Upload Statistics:

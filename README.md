@@ -9,7 +9,8 @@ Transform your ChatGPT conversation history into persistent, intelligent memorie
 - **💰 Cost Optimization**: OpenAI batch processing for 50% cost savings
 - **🧠 Intelligent Memory Processing**: Deduplication, confidence filtering, and categorization
 - **🔄 Mem0 Integration**: Seamless upload to Mem0 platform with full metadata
-- **🏠 Local Processing**: Complete local LLM processing with privacy-first approach
+- **🏠 Self-Hosted Option**: Complete local memory storage with OpenMemory integration
+- **🔒 Privacy-First**: Local processing option for sensitive conversations
 - **📈 Analytics & Insights**: Detailed processing statistics and confidence metrics
 - **🛡️ Dry-Run Mode**: Test processing without uploading to validate results
 
@@ -17,7 +18,7 @@ Transform your ChatGPT conversation history into persistent, intelligent memorie
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/memloader.git
+git clone https://github.com/your-username/memloader.git
 cd memloader
 ```
 
@@ -29,17 +30,40 @@ pip install -r requirements.txt
 ### 3. Choose Your LLM Provider
 
 #### Option A: Local Processing (Ollama) - Free & Private
+**⚠️ External Dependency**: Ollama installation and model management is outside the scope of this project.
+
+**⚠️ Performance Note**: Local processing can be significantly slower than cloud APIs, especially on CPU-only systems. Processing times can range from 5-30 seconds per conversation depending on your hardware.
+
 ```bash
-# Install Ollama
+# Install Ollama (see https://ollama.ai/install)
 curl -fsSL https://ollama.ai/install.sh | sh
 
 # Pull recommended model
 ollama pull nuextract
 ```
 
+**Hardware Recommendations:**
+- **Minimum**: 8GB RAM, modern CPU (expect slower processing)
+- **Recommended**: 16GB+ RAM, dedicated GPU (NVIDIA/AMD)
+- **Optimal**: 32GB+ RAM, high-end GPU (RTX 4090, etc.)
+
+For detailed installation instructions, visit: https://ollama.ai/
+
 #### Option B: Cloud Processing (OpenAI) - Fast & Scalable
 ```bash
 # Just need your OpenAI API key (set in .env)
+```
+
+#### Option C: Self-Hosted Memory Storage (OpenMemory)
+For complete self-hosting with local memory storage, you'll need to set up OpenMemory separately:
+
+**⚠️ External Dependency**: OpenMemory installation and configuration is outside the scope of this project. Please refer to the official documentation:
+- **OpenMemory Setup**: https://github.com/mem0ai/mem0/tree/main/openmemory
+- **Requirements**: Docker, Docker Compose, Qdrant vector database
+
+```bash
+# After setting up OpenMemory, you can use:
+python main.py conversations.json --local-server --provider ollama
 ```
 
 ### 4. Configure Environment
@@ -66,8 +90,11 @@ nano .env
 # Local processing (free)
 python main.py conversations.json --dry-run
 
-# Upload to Mem0
+# Upload to Mem0 cloud
 python main.py conversations.json --mem0-api-key your_key
+
+# Use local OpenMemory server
+python main.py conversations.json --local-server --provider ollama
 ```
 
 ### OpenAI with Batch Processing (50% savings)
@@ -87,15 +114,33 @@ python main.py conversations.json \
   --verbose
 ```
 
+### Complete Self-Hosted Setup
+```bash
+# Use local Ollama + local OpenMemory storage
+# Note: This will be slower but completely private
+python main.py conversations.json \
+  --local-server \
+  --provider ollama \
+  --user-id "my_user" \
+  --dry-run
+```
+
+**Performance Expectations:**
+- **Cloud API**: 3-8 seconds per conversation
+- **Local Ollama**: 5-30 seconds per conversation (depends on hardware)
+- **Batch Processing**: Slower individual processing but better cost efficiency
+
 ## ⚙️ Configuration Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--mem0-api-key` | Mem0 API key for uploads | ENV: `MEM0_API_KEY` |
-| `--user-id` | User ID for memory organization | `chatgpt_import` |
+| `--user-id` | User ID for memory organization | ENV: `USER` |
 | `--model` | Ollama model name | `nuextract` |
 | `--confidence-threshold` | Min confidence for memories | `0.7` |
-| `--batch-size` | Mem0 upload batch size | `100` |
+| `--batch-size` | Upload batch size | `100` |
+| `--provider` | LLM provider (ollama/openai) | `ollama` |
+| `--local-server` | Use local OpenMemory server | `false` |
 | `--use-batch` | Enable OpenAI batch processing | `false` |
 | `--dry-run` | Process without uploading | `false` |
 | `--clear-existing` | Clear existing memories first | `false` |
@@ -119,8 +164,9 @@ MemLoader extracts and categorizes memories into:
 ### Local Processing (Ollama)
 - **Cost**: $0 (hardware only)
 - **Privacy**: Complete local control
-- **Speed**: Moderate (depends on hardware)
-- **Best for**: Privacy-conscious users, cost optimization
+- **Speed**: Slow to moderate (highly dependent on hardware)
+- **Hardware Requirements**: GPU recommended for reasonable performance
+- **Best for**: Privacy-conscious users, cost optimization, users with capable hardware
 
 ### OpenAI Standard API
 - **GPT-4o-mini**: $0.15/1M input + $0.60/1M output tokens
@@ -135,11 +181,13 @@ MemLoader extracts and categorizes memories into:
 - **Best for**: Large exports with cost optimization
 
 ### Typical Usage Examples
-| User Type | Conversations | Est. Cost (Batch) | Est. Cost (Standard) |
-|-----------|---------------|-------------------|---------------------|
-| Light User | 100-500 | $0.01-$0.05 | $0.02-$0.10 |
-| Regular User | 500-1000 | $0.05-$0.15 | $0.10-$0.30 |
-| Heavy User | 1000+ | $0.15-$0.50 | $0.30-$1.00 |
+| User Type | Conversations | Est. Cost (Batch) | Est. Cost (Standard) | Local Processing Time* |
+|-----------|---------------|-------------------|---------------------|----------------------|
+| Light User | 100-500 | $0.01-$0.05 | $0.02-$0.10 | 8-40 minutes |
+| Regular User | 500-1000 | $0.05-$0.15 | $0.10-$0.30 | 40-80 minutes |
+| Heavy User | 1000+ | $0.15-$0.50 | $0.30-$1.00 | 80+ minutes |
+
+*Local processing times assume average hardware (16GB RAM, modern CPU). GPU acceleration can significantly reduce these times.
 
 ## 🏗️ Architecture
 
@@ -192,19 +240,27 @@ Confidence Statistics:
 
 ## 🔧 Advanced Usage
 
-### Local Processing with Cloud Storage
+### Deployment Options
+
+#### Option 1: Local Processing → Cloud Storage
 ```bash
-# 1. Test locally without uploading
-python main.py conversations.json --dry-run
-
-# 2. Process locally, upload to Mem0 cloud
-python main.py conversations.json --mem0-api-key your_key
-
-# 3. Use OpenAI batch processing for cost savings
-python main.py conversations.json --use-batch --mem0-api-key your_key
+# Process locally with Ollama, store in Mem0 cloud
+python main.py conversations.json --provider ollama --mem0-api-key your_key
 ```
 
-**Note**: Currently, memory storage only supports Mem0's cloud platform. Self-hosted memory storage is planned for future releases (see NEXTSTEPS.md).
+#### Option 2: Cloud Processing → Cloud Storage
+```bash
+# Use OpenAI batch processing for cost savings
+python main.py conversations.json --provider openai --use-batch --mem0-api-key your_key
+```
+
+#### Option 3: Complete Self-Hosted
+```bash
+# Process locally with Ollama, store in local OpenMemory
+python main.py conversations.json --provider ollama --local-server
+```
+
+**Note**: For self-hosted memory storage, you'll need to set up OpenMemory separately (see installation section).
 
 ### Environment Variables
 ```bash
@@ -213,13 +269,16 @@ MEM0_API_KEY=your_mem0_api_key
 MEMLOADER_OPENAI_API_KEY=your_openai_key
 
 # LLM Provider Selection  
-MEMLOADER_LLM_PROVIDER=openai  # or 'ollama'
-MEMLOADER_OPENAI_MODEL=gpt-4.1-nano
+MEMLOADER_LLM_PROVIDER=ollama  # or 'openai'
+MEMLOADER_OPENAI_MODEL=gpt-4o-mini
 
 # Processing Tuning
 MEMLOADER_CONFIDENCE_THRESHOLD=0.7
 MEMLOADER_BATCH_SIZE=100
 MEMLOADER_CHUNK_SIZE=1500
+
+# Timeout Settings (for large datasets)
+MEMLOADER_OLLAMA_TIMEOUT=600  # 10 minutes for large conversations
 ```
 
 ## 🔍 Troubleshooting
@@ -236,6 +295,13 @@ ollama list
 ollama run nuextract "Extract memories from: I love coffee in the morning"
 ```
 
+**Common Performance Issues:**
+- **Slow processing**: Ensure you have adequate RAM and consider GPU acceleration
+- **Model loading delays**: Models are downloaded on first use and cached locally
+- **Memory errors**: Reduce batch size or use smaller models if running out of memory
+- **CPU usage**: Ollama is CPU-intensive without GPU acceleration
+- **Timeout errors**: Increase `MEMLOADER_OLLAMA_TIMEOUT` in .env for very large conversations (default: 600 seconds)
+
 ### OpenAI Issues
 ```bash
 # Test API key
@@ -250,6 +316,11 @@ curl -H "Authorization: Bearer $OPENAI_API_KEY" \
 - **Low extraction**: Lower `--confidence-threshold` to 0.5-0.6
 - **Too many duplicates**: Conversations may have repetitive content
 - **Empty results**: Check conversation file format and model availability
+
+### Large Dataset Issues
+- **Timeout errors**: Increase `MEMLOADER_OLLAMA_TIMEOUT` in .env (default: 600 seconds)
+- **Memory issues**: Reduce `MEMLOADER_CHUNK_SIZE` for very large conversations
+- **Long processing times**: Consider using `--use-batch` with OpenAI for large datasets
 
 ## 🤝 Contributing
 
@@ -340,8 +411,8 @@ While this tool includes privacy-focused local processing options, **you are res
 
 ## 📞 Support
 
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/yourusername/memloader/issues)
-- **💡 Feature Requests**: [GitHub Discussions](https://github.com/yourusername/memloader/discussions)
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-username/memloader/issues)
+- **💡 Feature Requests**: [GitHub Discussions](https://github.com/your-username/memloader/discussions)
 - **📚 Documentation**: See [APPROACH.md](APPROACH.md) for technical details
 
 ---

@@ -136,7 +136,7 @@ class ChatGPTJSONParser:
                 return None
             
             # Join all content parts
-            content = '\\n'.join(str(part) for part in content_parts if part)
+            content = '\n'.join(str(part) for part in content_parts if part)
             
             if not content.strip():
                 return None
@@ -196,9 +196,9 @@ class ChatGPTJSONParser:
         text_parts.append(f"Title: {conversation.title}")
         
         for message in conversation.messages:
-            text_parts.append(f"\\n{message.role.upper()}: {message.content}")
+            text_parts.append(f"\n{message.role.upper()}: {message.content}")
         
-        full_text = '\\n'.join(text_parts)
+        full_text = '\n'.join(text_parts)
         
         # Simple chunking by character count (approximate token estimation)
         # 1 token ≈ 4 characters on average
@@ -212,7 +212,7 @@ class ChatGPTJSONParser:
             # Try to break at a natural boundary
             if end < len(full_text):
                 # Find the last newline or sentence boundary
-                last_newline = full_text.rfind('\\n', start, end)
+                last_newline = full_text.rfind('\n', start, end)
                 last_period = full_text.rfind('.', start, end)
                 
                 if last_newline > start + char_chunk_size // 2:

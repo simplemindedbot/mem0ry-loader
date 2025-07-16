@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     retry_attempts: int = Field(default=3)
     retry_delay: float = Field(default=1.0)
     
+    # Timeout Settings
+    ollama_timeout: int = Field(default=600)  # 10 minutes for large conversations
+    
     class Config:
         env_file = ".env"
         env_prefix = "MEMLOADER_"

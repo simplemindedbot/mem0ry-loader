@@ -204,7 +204,7 @@ Memories:"""
                         "num_predict": 2000  # Limit response length
                     }
                 },
-                timeout=60
+                timeout=settings.ollama_timeout
             )
             response.raise_for_status()
             
@@ -212,7 +212,8 @@ Memories:"""
             return result.get("response", "")
             
         except Timeout:
-            self.logger.error("Request to Ollama timed out")
+            self.logger.error(f"Request to Ollama timed out after {settings.ollama_timeout} seconds")
+            self.logger.info("Consider reducing chunk size or increasing timeout for large conversations")
             raise
         except RequestException as e:
             self.logger.error(f"Ollama request failed: {e}")

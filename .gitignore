@@ -6,10 +6,10 @@
 
 # Personal ChatGPT Data
 conversations.json
-sample_conversations.json
 *.json
 !package.json
 !requirements.json
+!sample_conversations.json
 
 # API Keys and Secrets
 *api_key*
