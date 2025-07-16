@@ -17,12 +17,14 @@ Transform your ChatGPT conversation history into persistent, intelligent memorie
 ## 🛠️ Installation
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/your-username/memloader.git
 cd memloader
 ```
 
 ### 2. Set Up Python Environment
+
 ```bash
 # Create virtual environment
 python -m venv memloader-env
@@ -38,6 +40,7 @@ pip install -r requirements.txt
 ```
 
 **Note**: Always activate the virtual environment before running MemLoader:
+
 ```bash
 source memloader-env/bin/activate  # macOS/Linux
 # or
@@ -47,6 +50,7 @@ memloader-env\Scripts\activate     # Windows
 ### 3. Choose Your LLM Provider
 
 #### Option A: Local Processing (Ollama) - Free & Private
+
 **⚠️ External Dependency**: Ollama installation and model management is outside the scope of this project.
 
 **⚠️ Performance Note**: Local processing can be significantly slower than cloud APIs, especially on CPU-only systems. Processing times can range from 5-30 seconds per conversation depending on your hardware.
@@ -60,22 +64,26 @@ ollama pull nuextract
 ```
 
 **Hardware Recommendations:**
+
 - **Minimum**: 8GB RAM, modern CPU (expect slower processing)
 - **Recommended**: 16GB+ RAM, dedicated GPU (NVIDIA/AMD)
 - **Optimal**: 32GB+ RAM, high-end GPU (RTX 4090, etc.)
 
-For detailed installation instructions, visit: https://ollama.ai/
+For detailed installation instructions, visit: <https://ollama.ai/>
 
 #### Option B: Cloud Processing (OpenAI) - Fast & Scalable
+
 ```bash
 # Just need your OpenAI API key (set in .env)
 ```
 
 #### Option C: Self-Hosted Memory Storage (OpenMemory)
+
 For complete self-hosting with local memory storage, you'll need to set up OpenMemory separately:
 
 **⚠️ External Dependency**: OpenMemory installation and configuration is outside the scope of this project. Please refer to the official documentation:
-- **OpenMemory Setup**: https://github.com/mem0ai/mem0/tree/main/openmemory
+
+- **OpenMemory Setup**: <https://github.com/mem0ai/mem0/tree/main/openmemory>
 - **Requirements**: Docker, Docker Compose, Qdrant vector database
 
 ```bash
@@ -84,6 +92,7 @@ python main.py conversations.json --local-server --provider ollama
 ```
 
 ### 4. Configure Environment
+
 ```bash
 # Copy example configuration
 cp .env.example .env
@@ -103,6 +112,7 @@ nano .env
 ## 🚀 Quick Start
 
 ### Basic Usage
+
 ```bash
 # Local processing (free)
 python main.py conversations.json --dry-run
@@ -115,6 +125,7 @@ python main.py conversations.json --local-server --provider ollama
 ```
 
 ### OpenAI with Batch Processing (50% savings)
+
 ```bash
 python main.py conversations.json \
   --use-batch \
@@ -122,6 +133,7 @@ python main.py conversations.json \
 ```
 
 ### Advanced Configuration
+
 ```bash
 python main.py conversations.json \
   --user-id "my_chatgpt_memories" \
@@ -132,6 +144,7 @@ python main.py conversations.json \
 ```
 
 ### Complete Self-Hosted Setup
+
 ```bash
 # Use local Ollama + local OpenMemory storage
 # Note: This will be slower but completely private
@@ -143,6 +156,7 @@ python main.py conversations.json \
 ```
 
 **Performance Expectations:**
+
 - **Cloud API**: 3-8 seconds per conversation
 - **Local Ollama**: 5-30 seconds per conversation (depends on hardware)
 - **Batch Processing**: Slower individual processing but better cost efficiency
@@ -179,6 +193,7 @@ MemLoader extracts and categorizes memories into:
 ## 💰 Cost Comparison
 
 ### Local Processing (Ollama)
+
 - **Cost**: $0 (hardware only)
 - **Privacy**: Complete local control
 - **Speed**: Slow to moderate (highly dependent on hardware)
@@ -186,18 +201,21 @@ MemLoader extracts and categorizes memories into:
 - **Best for**: Privacy-conscious users, cost optimization, users with capable hardware
 
 ### OpenAI Standard API
+
 - **GPT-4o-mini**: $0.15/1M input + $0.60/1M output tokens
 - **GPT-4.1-nano**: $0.10/1M input + $0.40/1M output tokens
 - **Speed**: Fast (3-8 seconds per conversation)
 - **Best for**: Speed and scale
 
 ### OpenAI Batch Processing (Recommended)
+
 - **50% cost reduction** on all models
 - **GPT-4o-mini**: $0.075/1M input + $0.30/1M output tokens
 - **Processing time**: Usually within hours, guaranteed within 24h
 - **Best for**: Large exports with cost optimization
 
 ### Typical Usage Examples
+
 | User Type | Conversations | Est. Cost (Batch) | Est. Cost (Standard) | Local Processing Time* |
 |-----------|---------------|-------------------|---------------------|----------------------|
 | Light User | 100-500 | $0.01-$0.05 | $0.02-$0.10 | 8-40 minutes |
@@ -208,7 +226,7 @@ MemLoader extracts and categorizes memories into:
 
 ## 🏗️ Architecture
 
-```
+``` txt
 memloader/
 ├── src/
 │   ├── config/          # Settings and configuration
@@ -226,7 +244,8 @@ memloader/
 ## 📊 Output Examples
 
 ### Processing Statistics
-```
+
+``` txt
 Processing Statistics:
   Input memories: 1,847
   Output memories: 1,203
@@ -248,7 +267,8 @@ Confidence Statistics:
 ```
 
 ### Sample Extracted Memories
-```
+
+ txt
 [preference] I prefer working late at night (10 PM - 2 AM) when it's quiet
 [fact] I'm a software engineer with 8 years experience in Python and JavaScript  
 [goal] Learning machine learning to transition into AI/ML engineering role
@@ -260,18 +280,21 @@ Confidence Statistics:
 ### Deployment Options
 
 #### Option 1: Local Processing → Cloud Storage
+
 ```bash
 # Process locally with Ollama, store in Mem0 cloud
 python main.py conversations.json --provider ollama --mem0-api-key your_key
 ```
 
 #### Option 2: Cloud Processing → Cloud Storage
+
 ```bash
 # Use OpenAI batch processing for cost savings
 python main.py conversations.json --provider openai --use-batch --mem0-api-key your_key
 ```
 
 #### Option 3: Complete Self-Hosted
+
 ```bash
 # Process locally with Ollama, store in local OpenMemory
 python main.py conversations.json --provider ollama --local-server
@@ -280,6 +303,7 @@ python main.py conversations.json --provider ollama --local-server
 **Note**: For self-hosted memory storage, you'll need to set up OpenMemory separately (see installation section).
 
 ### Environment Variables
+
 ```bash
 # Core Configuration
 MEM0_API_KEY=your_mem0_api_key
@@ -301,6 +325,7 @@ MEMLOADER_OLLAMA_TIMEOUT=600  # 10 minutes for large conversations
 ## 🔍 Troubleshooting
 
 ### Ollama Issues
+
 ```bash
 # Check Ollama status
 ollama serve
@@ -313,6 +338,7 @@ ollama run nuextract "Extract memories from: I love coffee in the morning"
 ```
 
 **Common Performance Issues:**
+
 - **Slow processing**: Ensure you have adequate RAM and consider GPU acceleration
 - **Model loading delays**: Models are downloaded on first use and cached locally
 - **Memory errors**: Reduce batch size or use smaller models if running out of memory
@@ -320,6 +346,7 @@ ollama run nuextract "Extract memories from: I love coffee in the morning"
 - **Timeout errors**: Increase `MEMLOADER_OLLAMA_TIMEOUT` in .env for very large conversations (default: 600 seconds)
 
 ### OpenAI Issues
+
 ```bash
 # Test API key
 curl -H "Authorization: Bearer $OPENAI_API_KEY" \
@@ -330,19 +357,23 @@ curl -H "Authorization: Bearer $OPENAI_API_KEY" \
 ```
 
 ### Memory Quality Issues
+
 - **Low extraction**: Lower `--confidence-threshold` to 0.5-0.6
 - **Too many duplicates**: Conversations may have repetitive content
 - **Empty results**: Check conversation file format and model availability
 
 ### Large Dataset Issues
+
 - **Timeout errors**: Increase `MEMLOADER_OLLAMA_TIMEOUT` in .env (default: 600 seconds)
 - **Memory issues**: Reduce `MEMLOADER_CHUNK_SIZE` for very large conversations
 - **Long processing times**: Consider using `--use-batch` with OpenAI for large datasets
 
 ### Python Environment Issues
+
 - **Module not found errors**: Ensure virtual environment is activated
 - **Permission errors**: Use virtual environment instead of system Python
 - **Dependency conflicts**: Create fresh virtual environment if needed
+
 ```bash
 # Recreate virtual environment
 rm -rf memloader-env
@@ -362,6 +393,7 @@ We welcome contributions! Here's how:
 5. **Open** a Pull Request
 
 ### Development Setup
+
 ```bash
 # Set up development environment
 python -m venv memloader-dev
@@ -393,7 +425,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## ⚠️ Important Disclaimers
 
 ### Cost Responsibility
+
 **All API usage costs are the sole responsibility of the end user.** Cost estimates provided in this documentation are approximations based on limited testing and may not reflect actual usage costs in your specific environment. Costs may vary significantly based on:
+
 - Conversation length and complexity
 - Model selection and pricing changes
 - API rate limits and retry logic
@@ -402,7 +436,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Simplemindedbot and Scot Campbell are not responsible for any API charges incurred through the use of this software.**
 
 ### Performance Metrics
+
 **All performance metrics and processing statistics are based on limited datasets and may not reflect real-world scenarios.** Actual results may vary based on:
+
 - Conversation content and structure
 - Hardware specifications (for local processing)
 - Network conditions and API response times
@@ -411,10 +447,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Use provided benchmarks as general guidance only, not as guaranteed performance metrics.**
 
 ### Data Privacy
+
 While this tool includes privacy-focused local processing options, **you are responsible for ensuring compliance with your organization's data policies and applicable privacy regulations** when processing conversation data.
 
 ### Third-Party Terms of Service
+
 **You must comply with all applicable third-party terms of service**, including but not limited to:
+
 - **OpenAI Terms of Service** - When using OpenAI APIs or processing ChatGPT data
 - **ChatGPT Terms of Use** - When exporting and processing your conversation data
 - **Mem0 Terms of Service** - When using Mem0 platform features
@@ -423,7 +462,9 @@ While this tool includes privacy-focused local processing options, **you are res
 **It is your responsibility to ensure you have proper licenses and permissions for all services used.**
 
 ### Security Considerations
+
 **Protect your API keys and sensitive data:**
+
 - Never commit API keys to version control
 - Use environment variables for all credentials
 - Review the .gitignore file before committing changes
@@ -431,13 +472,17 @@ While this tool includes privacy-focused local processing options, **you are res
 - Be aware that conversation data may contain sensitive personal information
 
 ### No Affiliation Disclaimer
+
 **MemLoader is an independent open-source project** and is not affiliated with, endorsed by, or sponsored by OpenAI, ChatGPT, Mem0, or any other third-party service providers. All trademarks are the property of their respective owners.
 
 ### Experimental Software
+
 **This is experimental software** that may contain bugs, security vulnerabilities, or incomplete features. Use at your own risk and thoroughly test before any production deployment. We recommend starting with small datasets and dry-run mode.
 
 ### Responsible Use
+
 **Please use this software responsibly:**
+
 - **Commercial Use**: While the MIT license permits commercial use, evaluate all third-party API terms and costs for business deployments
 - **Rate Limiting**: Respect API rate limits to avoid service interruptions or account restrictions
 - **Data Retention**: Consider implementing data retention and deletion policies for processed conversation data
