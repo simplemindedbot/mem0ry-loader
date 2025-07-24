@@ -2,80 +2,86 @@
 
 import json
 import logging
-import requests
-from typing import Dict, List, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
+import requests
 from requests.exceptions import RequestException, Timeout
 
-from ..config.settings import settings, OllamaModel
+from ..config.settings import OllamaModel, settings
 
 
 @dataclass
 class ExtractedMemory:
     """Represents an extracted memory."""
+
     content: str
     category: str
     confidence: float
     context: str
-    metadata: Dict = None
-    
-    def __post_init__(self):
+    metadata: Optional[Dict[str, Any]] = None
+
+    def __post_init__(self) -> None:
         if self.metadata is None:
             self.metadata = {}
 
 
 class OllamaExtractor:
     """Memory extractor using Ollama models."""
-    
-    def __init__(self, model: OllamaModel = None, base_url: str = None):
+
+    def __init__(
+        self, model: Optional[OllamaModel] = None, base_url: Optional[str] = None
+    ) -> None:
         self.model = model or settings.ollama_model
         self.base_url = base_url or settings.ollama_base_url
         self.logger = logging.getLogger(__name__)
-        
+
         # Ensure model is available
         self._ensure_model_available()
-    
-    def _ensure_model_available(self):
+
+    def _ensure_model_available(self) -> None:
         """Check if the model is available and pull if necessary."""
         try:
             # Check if model is already available
             response = requests.get(f"{self.base_url}/api/tags", timeout=10)
             response.raise_for_status()
-            
+
             available_models = {model["name"] for model in response.json()["models"]}
-            
+
             if self.model not in available_models:
                 self.logger.info(f"Model {self.model} not found. Pulling model...")
                 self._pull_model()
             else:
                 self.logger.info(f"Model {self.model} is available")
-                
+
         except RequestException as e:
             self.logger.error(f"Failed to check model availability: {e}")
             raise
-    
-    def _pull_model(self):
+
+    def _pull_model(self) -> None:
         """Pull the model from Ollama."""
         try:
             response = requests.post(
                 f"{self.base_url}/api/pull",
                 json={"name": self.model},
-                timeout=300  # 5 minutes timeout for model pulling
+                timeout=300,  # 5 minutes timeout for model pulling
             )
             response.raise_for_status()
             self.logger.info(f"Successfully pulled model {self.model}")
-            
+
         except RequestException as e:
             self.logger.error(f"Failed to pull model {self.model}: {e}")
             raise
-    
-    def extract_memories(self, text_chunk: str, conversation_title: str = "") -> List[ExtractedMemory]:
+
+    def extract_memories(
+        self, text_chunk: str, conversation_title: str = ""
+    ) -> List[ExtractedMemory]:
         """Extract memories from a text chunk.
-        
+
         Args:
             text_chunk: Text to extract memories from
             conversation_title: Title of the conversation for context
-            
+
         Returns:
             List of extracted memories
         """
@@ -83,10 +89,12 @@ class OllamaExtractor:
             return self._extract_with_nuextract(text_chunk, conversation_title)
         else:
             return self._extract_with_general_model(text_chunk, conversation_title)
-    
-    def _extract_with_nuextract(self, text_chunk: str, conversation_title: str) -> List[ExtractedMemory]:
+
+    def _extract_with_nuextract(
+        self, text_chunk: str, conversation_title: str
+    ) -> List[ExtractedMemory]:
         """Extract memories using NuExtract model with JSON template."""
-        
+
         # JSON template for NuExtract
         extraction_template = {
             "memories": [
@@ -94,11 +102,11 @@ class OllamaExtractor:
                     "content": "The extracted memory content",
                     "category": "One of: preference, fact, pattern, goal, skill, relationship, context, decision_criteria",
                     "confidence": "Float between 0 and 1",
-                    "reasoning": "Why this is considered a memory"
+                    "reasoning": "Why this is considered a memory",
                 }
             ]
         }
-        
+
         prompt = f"""Extract personal memories, preferences, and contextual information from this conversation.
 
 Context: {conversation_title}
@@ -108,7 +116,7 @@ Text:
 
 Focus on:
 - User preferences and habits
-- Important personal details  
+- Important personal details
 - Recurring topics/interests
 - Problem-solving patterns
 - Decision-making criteria
@@ -129,14 +137,16 @@ Extract memories:"""
         try:
             response = self._make_ollama_request(prompt)
             return self._parse_nuextract_response(response, text_chunk)
-            
+
         except Exception as e:
             self.logger.error(f"Failed to extract memories with NuExtract: {e}")
             return []
-    
-    def _extract_with_general_model(self, text_chunk: str, conversation_title: str) -> List[ExtractedMemory]:
+
+    def _extract_with_general_model(
+        self, text_chunk: str, conversation_title: str
+    ) -> List[ExtractedMemory]:
         """Extract memories using general-purpose models."""
-        
+
         prompt = f"""Extract personal memories from this conversation text.
 
 Context: {conversation_title}
@@ -163,7 +173,7 @@ Format as JSON array:
 [
   {{
     "content": "memory content here",
-    "category": "category here", 
+    "category": "category here",
     "confidence": 0.9,
     "reasoning": "why this is important"
   }}
@@ -174,20 +184,20 @@ Memories:"""
         try:
             response = self._make_ollama_request(prompt)
             return self._parse_general_response(response, text_chunk)
-            
+
         except Exception as e:
             self.logger.error(f"Failed to extract memories with {self.model}: {e}")
             return []
-    
+
     def _make_ollama_request(self, prompt: str) -> str:
         """Make a request to the Ollama API.
-        
+
         Args:
             prompt: The prompt to send
-            
+
         Returns:
             The model's response text
-            
+
         Raises:
             RequestException: If the request fails
         """
@@ -201,38 +211,44 @@ Memories:"""
                     "options": {
                         "temperature": 0.3,  # Lower temperature for more consistent extraction
                         "top_p": 0.9,
-                        "num_predict": 2000  # Limit response length
-                    }
+                        "num_predict": 2000,  # Limit response length
+                    },
                 },
-                timeout=settings.ollama_timeout
+                timeout=settings.ollama_timeout,
             )
             response.raise_for_status()
-            
+
             result = response.json()
             return result.get("response", "")
-            
+
         except Timeout:
-            self.logger.error(f"Request to Ollama timed out after {settings.ollama_timeout} seconds")
-            self.logger.info("Consider reducing chunk size or increasing timeout for large conversations")
+            self.logger.error(
+                f"Request to Ollama timed out after {settings.ollama_timeout} seconds"
+            )
+            self.logger.info(
+                "Consider reducing chunk size or increasing timeout for large conversations"
+            )
             raise
         except RequestException as e:
             self.logger.error(f"Ollama request failed: {e}")
             raise
-    
-    def _parse_nuextract_response(self, response: str, context: str) -> List[ExtractedMemory]:
+
+    def _parse_nuextract_response(
+        self, response: str, context: str
+    ) -> List[ExtractedMemory]:
         """Parse NuExtract model response."""
         try:
             # Try to find JSON in the response
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
-            
+            json_start = response.find("{")
+            json_end = response.rfind("}") + 1
+
             if json_start == -1 or json_end == 0:
                 self.logger.warning("No JSON found in NuExtract response")
                 return []
-            
+
             json_str = response[json_start:json_end]
             data = json.loads(json_str)
-            
+
             memories = []
             for memory_data in data.get("memories", []):
                 try:
@@ -241,37 +257,39 @@ Memories:"""
                         category=memory_data.get("category", "context"),
                         confidence=float(memory_data.get("confidence", 0.5)),
                         context=context,
-                        metadata={"reasoning": memory_data.get("reasoning", "")}
+                        metadata={"reasoning": memory_data.get("reasoning", "")},
                     )
-                    
+
                     # Filter by confidence threshold
                     if memory.confidence >= settings.confidence_threshold:
                         memories.append(memory)
-                    
+
                 except (ValueError, KeyError) as e:
                     self.logger.warning(f"Failed to parse memory: {e}")
                     continue
-            
+
             return memories
-            
+
         except json.JSONDecodeError as e:
             self.logger.warning(f"Failed to parse JSON from NuExtract: {e}")
             return []
-    
-    def _parse_general_response(self, response: str, context: str) -> List[ExtractedMemory]:
+
+    def _parse_general_response(
+        self, response: str, context: str
+    ) -> List[ExtractedMemory]:
         """Parse response from general-purpose models."""
         try:
             # Try to find JSON array in the response
-            json_start = response.find('[')
-            json_end = response.rfind(']') + 1
-            
+            json_start = response.find("[")
+            json_end = response.rfind("]") + 1
+
             if json_start == -1 or json_end == 0:
                 self.logger.warning("No JSON array found in response")
                 return []
-            
+
             json_str = response[json_start:json_end]
             data = json.loads(json_str)
-            
+
             memories = []
             for memory_data in data:
                 try:
@@ -280,19 +298,19 @@ Memories:"""
                         category=memory_data.get("category", "context"),
                         confidence=float(memory_data.get("confidence", 0.5)),
                         context=context,
-                        metadata={"reasoning": memory_data.get("reasoning", "")}
+                        metadata={"reasoning": memory_data.get("reasoning", "")},
                     )
-                    
+
                     # Filter by confidence threshold
                     if memory.confidence >= settings.confidence_threshold:
                         memories.append(memory)
-                    
+
                 except (ValueError, KeyError) as e:
                     self.logger.warning(f"Failed to parse memory: {e}")
                     continue
-            
+
             return memories
-            
+
         except json.JSONDecodeError as e:
             self.logger.warning(f"Failed to parse JSON from response: {e}")
             return []
