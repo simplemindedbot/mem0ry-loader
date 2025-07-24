@@ -137,7 +137,7 @@ class Mem0Loader:
             self.logger.info(f"Found {len(memories)} existing memories for user {self.user_id}")
             return memories
             
-        except APIError as e:
+        except Exception as e:
             self.logger.error(f"Failed to fetch existing memories: {e}")
             return []
     

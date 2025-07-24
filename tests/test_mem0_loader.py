@@ -26,6 +26,7 @@ class TestMem0Loader:
     def test_prepare_memories_for_upload(self, mock_memory_client_class):
         """Test preparing memories for upload."""
         mock_client = Mock()
+        mock_client.get_all.return_value = []  # Mock empty existing memories
         mock_memory_client_class.return_value = mock_client
         
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
@@ -39,19 +40,19 @@ class TestMem0Loader:
         
         assert len(prepared) == 2
         
-        # Check first memory preparation
+        # Check first memory preparation - it should return ExtractedMemory objects
         mem1 = prepared[0]
-        assert mem1["text"] == "User likes Python"
-        assert mem1["user_id"] == "test_user"
-        assert mem1["metadata"]["category"] == "preference"
-        assert mem1["metadata"]["confidence"] == 0.9
-        assert mem1["metadata"]["context"] == "context1"
-        assert mem1["metadata"]["source"] == "conv1"
+        assert mem1.content == "User likes Python"
+        assert mem1.category == "preference"
+        assert mem1.confidence == 0.9
+        assert mem1.context == "context1"
+        assert mem1.metadata["source"] == "conv1"
 
     @patch('src.loaders.mem0_loader.MemoryClient')
     def test_prepare_memories_empty_list(self, mock_memory_client_class):
         """Test preparing empty memory list."""
         mock_client = Mock()
+        mock_client.get_all.return_value = []  # Mock empty existing memories
         mock_memory_client_class.return_value = mock_client
         
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
