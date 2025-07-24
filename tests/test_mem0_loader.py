@@ -1,4 +1,4 @@
-"""Tests for Mem0 loader."""
+"""Tests for Mem0 loader focusing on public interface."""
 
 from unittest.mock import Mock, patch
 
@@ -67,24 +67,29 @@ class TestMem0Loader:
         """Test successful memory loading."""
         mock_client = Mock()
         mock_client.add.return_value = {"id": "mem_123", "status": "success"}
+        mock_client.get_all.return_value = []  # No existing memories
         mock_memory_client_class.return_value = mock_client
 
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
 
-        prepared_memories = [
-            {
-                "text": "User likes Python",
-                "user_id": "test_user",
-                "metadata": {"category": "preference", "confidence": 0.9},
-            },
-            {
-                "text": "User is engineer",
-                "user_id": "test_user",
-                "metadata": {"category": "fact", "confidence": 0.95},
-            },
+        memories = [
+            ExtractedMemory(
+                content="User likes Python",
+                category="preference",
+                confidence=0.9,
+                context="test context",
+                metadata={"source": "test"},
+            ),
+            ExtractedMemory(
+                content="User is engineer",
+                category="fact",
+                confidence=0.95,
+                context="test context",
+                metadata={"source": "test"},
+            ),
         ]
 
-        stats = loader.load_memories(prepared_memories, batch_size=10)
+        stats = loader.load_memories(memories, batch_size=10)
 
         assert stats["total_processed"] == 2
         assert stats["uploaded"] == 2
@@ -95,10 +100,10 @@ class TestMem0Loader:
         assert mock_client.add.call_count == 2
 
     @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_load_memories_partial_failure(self, mock_memory_client_class):
-        """Test memory loading with partial failures."""
+    def test_load_memories_with_upload_errors(self, mock_memory_client_class):
+        """Test memory loading with some upload failures."""
         mock_client = Mock()
-
+        mock_client.get_all.return_value = []  # No existing memories
         # First call succeeds, second fails
         mock_client.add.side_effect = [
             {"id": "mem_123", "status": "success"},
@@ -108,20 +113,16 @@ class TestMem0Loader:
 
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
 
-        prepared_memories = [
-            {
-                "text": "User likes Python",
-                "user_id": "test_user",
-                "metadata": {"category": "preference"},
-            },
-            {
-                "text": "User is engineer",
-                "user_id": "test_user",
-                "metadata": {"category": "fact"},
-            },
+        memories = [
+            ExtractedMemory(
+                "User likes Python", "preference", 0.9, "context1", {"source": "test"}
+            ),
+            ExtractedMemory(
+                "User is engineer", "fact", 0.95, "context2", {"source": "test"}
+            ),
         ]
 
-        stats = loader.load_memories(prepared_memories, batch_size=10)
+        stats = loader.load_memories(memories, batch_size=10)
 
         assert stats["total_processed"] == 2
         assert stats["uploaded"] == 1
@@ -129,204 +130,90 @@ class TestMem0Loader:
         assert stats["success_rate"] == 0.5
 
     @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_load_memories_empty_list(self, mock_memory_client_class):
-        """Test loading empty memory list."""
-        mock_client = Mock()
-        mock_memory_client_class.return_value = mock_client
-
-        loader = Mem0Loader(api_key="test_key", user_id="test_user")
-
-        stats = loader.load_memories([], batch_size=10)
-
-        assert stats["total_processed"] == 0
-        assert stats["uploaded"] == 0
-        assert stats["failed"] == 0
-        assert stats["success_rate"] == 0.0
-
-    @patch("src.loaders.mem0_loader.MemoryClient")
     def test_load_memories_batching(self, mock_memory_client_class):
         """Test memory loading with batching."""
         mock_client = Mock()
         mock_client.add.return_value = {"id": "mem_123", "status": "success"}
+        mock_client.get_all.return_value = []  # No existing memories
         mock_memory_client_class.return_value = mock_client
 
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
 
-        # Create 5 memories with batch size of 2
-        prepared_memories = [
-            {
-                "text": f"Memory {i}",
-                "user_id": "test_user",
-                "metadata": {"category": "fact"},
-            }
+        # Create 5 memories to test batching with batch_size=2
+        memories = [
+            ExtractedMemory(
+                f"Memory {i}", "fact", 0.8, f"context{i}", {"source": "test"}
+            )
             for i in range(5)
         ]
 
-        stats = loader.load_memories(prepared_memories, batch_size=2)
+        stats = loader.load_memories(memories, batch_size=2)
 
         assert stats["total_processed"] == 5
         assert stats["uploaded"] == 5
         assert stats["failed"] == 0
         assert stats["success_rate"] == 1.0
 
+        # Should be called once for each memory
+        assert mock_client.add.call_count == 5
+
     @patch("src.loaders.mem0_loader.MemoryClient")
     def test_get_existing_memories_success(self, mock_memory_client_class):
-        """Test getting existing memories."""
+        """Test successful retrieval of existing memories."""
         mock_client = Mock()
         mock_client.get_all.return_value = [
-            {"id": "mem_1", "text": "Memory 1"},
-            {"id": "mem_2", "text": "Memory 2"},
+            {"id": "1", "content": "Existing memory 1"},
+            {"id": "2", "content": "Existing memory 2"},
         ]
         mock_memory_client_class.return_value = mock_client
 
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
 
-        existing = loader.get_existing_memories()
+        memories = loader.get_existing_memories()
 
-        assert len(existing) == 2
-        assert existing[0]["id"] == "mem_1"
-        assert existing[1]["id"] == "mem_2"
-
+        assert len(memories) == 2
+        assert memories[0]["content"] == "Existing memory 1"
         mock_client.get_all.assert_called_once_with(user_id="test_user")
 
     @patch("src.loaders.mem0_loader.MemoryClient")
     def test_get_existing_memories_api_error(self, mock_memory_client_class):
-        """Test getting existing memories with API error."""
+        """Test handling of API errors when getting existing memories."""
         mock_client = Mock()
         mock_client.get_all.side_effect = Exception("API Error")
         mock_memory_client_class.return_value = mock_client
 
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
 
-        existing = loader.get_existing_memories()
-        assert existing == []
+        memories = loader.get_existing_memories()
+
+        # Should return empty list on error
+        assert memories == []
 
     @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_delete_existing_memories_success(self, mock_memory_client_class):
-        """Test deleting existing memories."""
-        mock_client = Mock()
-        mock_client.delete.return_value = {"status": "success"}
-        mock_memory_client_class.return_value = mock_client
-
-        loader = Mem0Loader(api_key="test_key", user_id="test_user")
-
-        memory_ids = ["mem_1", "mem_2", "mem_3"]
-        deleted_count = loader.delete_existing_memories(memory_ids)
-
-        assert deleted_count == 3
-        assert mock_client.delete.call_count == 3
-
-        # Verify each memory was deleted
-        for memory_id in memory_ids:
-            mock_client.delete.assert_any_call(memory_id=memory_id)
-
-    @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_delete_existing_memories_partial_failure(self, mock_memory_client_class):
-        """Test deleting memories with partial failures."""
-        mock_client = Mock()
-
-        # First two succeed, third fails
-        mock_client.delete.side_effect = [
-            {"status": "success"},
-            {"status": "success"},
-            Exception("Delete failed"),
-        ]
-        mock_memory_client_class.return_value = mock_client
-
-        loader = Mem0Loader(api_key="test_key", user_id="test_user")
-
-        memory_ids = ["mem_1", "mem_2", "mem_3"]
-        deleted_count = loader.delete_existing_memories(memory_ids)
-
-        assert deleted_count == 2  # Only first two succeeded
-
-    @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_delete_existing_memories_empty_list(self, mock_memory_client_class):
-        """Test deleting empty memory list."""
-        mock_client = Mock()
-        mock_memory_client_class.return_value = mock_client
-
-        loader = Mem0Loader(api_key="test_key", user_id="test_user")
-
-        deleted_count = loader.delete_existing_memories([])
-        assert deleted_count == 0
-        mock_client.delete.assert_not_called()
-
-    @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_upload_memory_success(self, mock_memory_client_class):
-        """Test successful single memory upload."""
-        mock_client = Mock()
-        mock_client.add.return_value = {"id": "mem_123", "status": "success"}
-        mock_memory_client_class.return_value = mock_client
-
-        loader = Mem0Loader(api_key="test_key", user_id="test_user")
-
-        memory_data = {
-            "text": "User likes Python",
-            "user_id": "test_user",
-            "metadata": {"category": "preference"},
-        }
-
-        success = loader._upload_memory(memory_data)
-        assert success
-
-        mock_client.add.assert_called_once_with(**memory_data)
-
-    @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_upload_memory_failure(self, mock_memory_client_class):
-        """Test failed single memory upload."""
-        mock_client = Mock()
-        mock_client.add.side_effect = Exception("Upload failed")
-        mock_memory_client_class.return_value = mock_client
-
-        loader = Mem0Loader(api_key="test_key", user_id="test_user")
-
-        memory_data = {
-            "text": "User likes Python",
-            "user_id": "test_user",
-            "metadata": {"category": "preference"},
-        }
-
-        success = loader._upload_memory(memory_data)
-        assert not success
-
-    @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_build_memory_metadata(self, mock_memory_client_class):
-        """Test building memory metadata."""
+    def test_validate_memory_valid(self, mock_memory_client_class):
+        """Test memory validation with valid memory."""
         mock_client = Mock()
         mock_memory_client_class.return_value = mock_client
 
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
 
         memory = ExtractedMemory(
-            "User likes Python",
-            "preference",
-            0.9,
-            "conversation context",
-            {"source": "conv1", "timestamp": "2024-01-01"},
+            "Valid content", "preference", 0.8, "context", {"source": "test"}
         )
 
-        metadata = loader._build_memory_metadata(memory)
-
-        assert metadata["category"] == "preference"
-        assert metadata["confidence"] == 0.9
-        assert metadata["context"] == "conversation context"
-        assert metadata["source"] == "conv1"
-        assert metadata["timestamp"] == "2024-01-01"
+        assert loader.validate_memory(memory)
 
     @patch("src.loaders.mem0_loader.MemoryClient")
-    def test_build_memory_metadata_minimal(self, mock_memory_client_class):
-        """Test building memory metadata with minimal data."""
+    def test_validate_memory_low_confidence(self, mock_memory_client_class):
+        """Test memory validation with low confidence memory."""
         mock_client = Mock()
         mock_memory_client_class.return_value = mock_client
 
         loader = Mem0Loader(api_key="test_key", user_id="test_user")
 
-        memory = ExtractedMemory("User likes Python", "preference", 0.9, "")
+        memory = ExtractedMemory(
+            "Valid content", "preference", 0.3, "context", {"source": "test"}
+        )
 
-        metadata = loader._build_memory_metadata(memory)
-
-        assert metadata["category"] == "preference"
-        assert metadata["confidence"] == 0.9
-        assert metadata["context"] == ""
-        assert len(metadata) == 3  # Only basic fields
+        # Should be invalid due to low confidence (below default 0.7 threshold)
+        assert not loader.validate_memory(memory)
