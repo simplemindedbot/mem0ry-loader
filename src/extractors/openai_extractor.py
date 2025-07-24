@@ -5,7 +5,7 @@ import logging
 import os
 import time
 import uuid
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from openai import OpenAI
 
@@ -17,8 +17,11 @@ class OpenAIExtractor:
     """Memory extractor using OpenAI models."""
 
     def __init__(
-        self, model: OpenAIModel = None, api_key: str = None, use_batch: bool = False
-    ):
+        self,
+        model: Optional[OpenAIModel] = None,
+        api_key: Optional[str] = None,
+        use_batch: bool = False,
+    ) -> None:
         self.model = model or settings.openai_model
         self.api_key = (
             api_key or settings.openai_api_key or os.getenv("MEMLOADER_OPENAI_API_KEY")
@@ -35,8 +38,8 @@ class OpenAIExtractor:
         self.client = OpenAI(api_key=self.api_key)
 
         # Batch processing state
-        self.batch_requests = []
-        self.batch_id = None
+        self.batch_requests: List[Dict[str, Any]] = []
+        self.batch_id: Optional[str] = None
 
         self.logger.info(
             f"Initialized OpenAI extractor with model: {self.model}, batch: {self.use_batch}"

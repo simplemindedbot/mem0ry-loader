@@ -32,7 +32,7 @@ class Conversation:
 class ChatGPTJSONParser:
     """Parser for ChatGPT conversations.json exports."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
 
     def parse_export(self, file_path: Path) -> List[Conversation]:
@@ -156,7 +156,7 @@ class ChatGPTJSONParser:
             self.logger.warning(f"Failed to parse message {msg_id}: {e}")
             return None
 
-    def _parse_timestamp(self, timestamp_value) -> Optional[datetime]:
+    def _parse_timestamp(self, timestamp_value: Optional[float]) -> Optional[datetime]:
         """Parse timestamp from various formats.
 
         Args:

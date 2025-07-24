@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 from mem0 import MemoryClient
 
@@ -13,7 +13,9 @@ from ..extractors.ollama_extractor import ExtractedMemory
 class Mem0Loader:
     """Loader for uploading memories to Mem0 platform."""
 
-    def __init__(self, api_key: str = None, user_id: str = "chatgpt_import"):
+    def __init__(
+        self, api_key: Optional[str] = None, user_id: str = "chatgpt_import"
+    ) -> None:
         self.api_key = api_key or settings.mem0_api_key
         self.user_id = user_id
         self.logger = logging.getLogger(__name__)
@@ -26,8 +28,8 @@ class Mem0Loader:
         self.failed_count = 0
 
     def load_memories(
-        self, memories: List[ExtractedMemory], batch_size: int = None
-    ) -> Dict[str, int]:
+        self, memories: List[ExtractedMemory], batch_size: Optional[int] = None
+    ) -> Dict[str, Any]:
         """Load memories to Mem0 platform.
 
         Args:
@@ -59,7 +61,7 @@ class Mem0Loader:
         self.logger.info(f"Upload complete. Stats: {stats}")
         return stats
 
-    def _upload_batch(self, batch: List[ExtractedMemory], batch_num: int):
+    def _upload_batch(self, batch: List[ExtractedMemory], batch_num: int) -> None:
         """Upload a batch of memories.
 
         Args:
@@ -77,7 +79,7 @@ class Mem0Loader:
                 self.logger.error(f"Failed to upload memory: {e}")
                 self.failed_count += 1
 
-    def _upload_single_memory(self, memory: ExtractedMemory):
+    def _upload_single_memory(self, memory: ExtractedMemory) -> Any:
         """Upload a single memory to Mem0.
 
         Args:
@@ -101,7 +103,7 @@ class Mem0Loader:
             "category": memory.category,
             "confidence": memory.confidence,
             "original_context": memory.context[:500],  # Truncate long context
-            **memory.metadata,
+            **(memory.metadata or {}),
         }
 
         # Upload to Mem0

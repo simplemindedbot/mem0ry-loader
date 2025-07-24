@@ -3,7 +3,7 @@
 import json
 import logging
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 from requests.exceptions import RequestException, Timeout
@@ -19,9 +19,9 @@ class ExtractedMemory:
     category: str
     confidence: float
     context: str
-    metadata: Dict = None
+    metadata: Optional[Dict[str, Any]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.metadata is None:
             self.metadata = {}
 
@@ -29,7 +29,9 @@ class ExtractedMemory:
 class OllamaExtractor:
     """Memory extractor using Ollama models."""
 
-    def __init__(self, model: OllamaModel = None, base_url: str = None):
+    def __init__(
+        self, model: Optional[OllamaModel] = None, base_url: Optional[str] = None
+    ) -> None:
         self.model = model or settings.ollama_model
         self.base_url = base_url or settings.ollama_base_url
         self.logger = logging.getLogger(__name__)
@@ -37,7 +39,7 @@ class OllamaExtractor:
         # Ensure model is available
         self._ensure_model_available()
 
-    def _ensure_model_available(self):
+    def _ensure_model_available(self) -> None:
         """Check if the model is available and pull if necessary."""
         try:
             # Check if model is already available
@@ -56,7 +58,7 @@ class OllamaExtractor:
             self.logger.error(f"Failed to check model availability: {e}")
             raise
 
-    def _pull_model(self):
+    def _pull_model(self) -> None:
         """Pull the model from Ollama."""
         try:
             response = requests.post(

@@ -3,7 +3,7 @@
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from ..extractors.ollama_extractor import ExtractedMemory
 
@@ -229,7 +229,7 @@ class MemoryProcessor:
         # For more complex cases, combine unique information
         # This is a simplified approach - could be enhanced with NLP
         unique_parts = []
-        seen_words = set()
+        seen_words: Set[str] = set()
 
         for content in sorted(contents, key=len, reverse=True):
             words = set(content.lower().split())
@@ -301,7 +301,7 @@ class MemoryProcessor:
         self, memories: List[ExtractedMemory]
     ) -> Dict[str, int]:
         """Get distribution of memories by category."""
-        distribution = defaultdict(int)
+        distribution: Dict[str, int] = defaultdict(int)
         for memory in memories:
             distribution[memory.category] += 1
         return dict(distribution)
