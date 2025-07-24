@@ -5,7 +5,6 @@ import time
 from typing import List, Dict, Optional
 from dataclasses import asdict
 from mem0 import MemoryClient
-from mem0.client.main import APIError
 
 from ..extractors.ollama_extractor import ExtractedMemory
 from ..config.settings import settings
