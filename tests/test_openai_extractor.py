@@ -17,7 +17,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         assert extractor.model == "gpt-4o-mini"
         assert extractor.use_batch == False
         assert extractor.client == mock_client
@@ -28,7 +28,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini", use_batch=True)
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key", use_batch=True)
         assert extractor.use_batch == True
         assert extractor.batch_requests == []
 
@@ -56,7 +56,7 @@ class TestOpenAIExtractor:
         mock_client.chat.completions.create.return_value = mock_response
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         conversation_text = "I am a software engineer and I love Python programming"
         memories = extractor.extract_memories(conversation_text, "Test conversation")
@@ -75,7 +75,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini", use_batch=True)
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key", use_batch=True)
         
         conversation_text = "I am a software engineer"
         memories = extractor.extract_memories(conversation_text, "Test conversation")
@@ -96,7 +96,7 @@ class TestOpenAIExtractor:
         mock_client.chat.completions.create.side_effect = Exception("API Error")
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memories = extractor.extract_memories("Some text", "Test")
         assert memories == []
@@ -111,7 +111,7 @@ class TestOpenAIExtractor:
         mock_client.chat.completions.create.return_value = mock_response
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memories = extractor.extract_memories("Some text", "Test")
         assert memories == []
@@ -126,7 +126,7 @@ class TestOpenAIExtractor:
         mock_client.chat.completions.create.return_value = mock_response
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memories = extractor.extract_memories("No interesting content", "Test") 
         assert memories == []
@@ -137,7 +137,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         messages = extractor._build_extraction_messages("Test conversation", "Test title")
         
@@ -159,7 +159,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         response_content = json.dumps({
             "memories": [
@@ -185,7 +185,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memories = extractor._parse_openai_response("invalid json", "Test context")
         assert memories == []
@@ -196,7 +196,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         response_content = json.dumps({"other_key": "value"})
         memories = extractor._parse_openai_response(response_content, "Test context")
@@ -226,7 +226,7 @@ class TestOpenAIExtractor:
         
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini", use_batch=True)
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key", use_batch=True)
         
         # Add a request to batch
         extractor.batch_requests = [{
@@ -252,7 +252,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini", use_batch=True)
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key", use_batch=True)
         
         memories = extractor.process_batch()
         assert memories == []
@@ -268,7 +268,7 @@ class TestOpenAIExtractor:
         
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini", use_batch=True)
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key", use_batch=True)
         extractor.batch_requests = [{"custom_id": "req_1", "method": "POST", "url": "/v1/chat/completions", "body": {}}]
         
         memories = extractor.process_batch()
@@ -280,7 +280,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memory_data = {
             "content": "User likes Python",
@@ -296,7 +296,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memory_data = {
             "content": "User likes Python",
@@ -312,7 +312,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memory_data = {
             "content": "User likes Python", 
@@ -328,7 +328,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memory_data = {
             "category": "preference",
@@ -344,7 +344,7 @@ class TestOpenAIExtractor:
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
         
-        extractor = OpenAIExtractor(model="gpt-4o-mini")
+        extractor = OpenAIExtractor(model="gpt-4o-mini", api_key="test-key")
         
         memory_data = {
             "content": "",
