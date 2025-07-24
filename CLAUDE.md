@@ -41,10 +41,25 @@ Currently no automated tests are configured. To test:
 - Check logs in `memloader.log`
 
 ### Linting and Code Quality
-No specific linting commands are configured. Consider adding:
-- `black` for code formatting
-- `ruff` for linting
-- `mypy` for type checking
+```bash
+# Format code with Black
+black src/ tests/
+
+# Lint code with Ruff (check and fix)
+ruff check src/ tests/ --fix
+
+# Type checking with MyPy
+mypy src/
+
+# Run all quality checks together
+black src/ tests/ && ruff check src/ tests/ --fix && mypy src/
+
+# Run pre-commit hooks manually
+pre-commit run --all-files
+
+# Install pre-commit hooks (run once)
+pre-commit install
+```
 
 ## Architecture Overview
 
@@ -74,7 +89,7 @@ No specific linting commands are configured. Consider adding:
 The system categorizes extracted memories into 8 types:
 - `preference`: User habits and preferences
 - `fact`: Important personal details
-- `pattern`: Behavioral and thinking patterns  
+- `pattern`: Behavioral and thinking patterns
 - `goal`: Aspirations and objectives
 - `skill`: Expertise and capabilities
 - `relationship`: People and connections
@@ -93,7 +108,7 @@ Settings are managed through Pydantic with environment variable support:
 1. **Ollama** (default): Local processing, requires Ollama installation
 2. **OpenAI**: Cloud API with optional batch processing for cost savings
 
-### Memory Storage Options  
+### Memory Storage Options
 1. **Mem0 Cloud**: Hosted platform (requires API key)
 2. **OpenMemory**: Self-hosted solution (requires separate setup)
 
