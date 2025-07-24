@@ -177,11 +177,11 @@ python main.py conversations.json \
 | `--clear-existing` | Clear existing memories first | `false` |
 | `--verbose` | Enable detailed logging | `false` |
 
-## 🧠 Memory Categories
+## Memory Categories
 
-MemLoader extracts and categorizes memories into:
+MemLoader extracts and categorizes memories into 8 types:
 
-- **🎯 Preferences**: User habits and preferences  
+- **🎯 Preferences**: User habits and preferences
 - **📋 Facts**: Important personal details
 - **🔄 Patterns**: Behavioral and thinking patterns
 - **🏆 Goals**: Aspirations and objectives
@@ -270,7 +270,7 @@ Confidence Statistics:
 
  txt
 [preference] I prefer working late at night (10 PM - 2 AM) when it's quiet
-[fact] I'm a software engineer with 8 years experience in Python and JavaScript  
+[fact] I'm a software engineer with 8 years experience in Python and JavaScript
 [goal] Learning machine learning to transition into AI/ML engineering role
 [pattern] I ask detailed technical questions and prefer step-by-step explanations
 ```
@@ -305,21 +305,15 @@ python main.py conversations.json --provider ollama --local-server
 ### Environment Variables
 
 ```bash
-# Core Configuration
-MEM0_API_KEY=your_mem0_api_key
+# Required for cloud processing
 MEMLOADER_OPENAI_API_KEY=your_openai_key
+MEM0_API_KEY=your_mem0_api_key
 
-# LLM Provider Selection  
+# Processing configuration
 MEMLOADER_LLM_PROVIDER=ollama  # or 'openai'
-MEMLOADER_OPENAI_MODEL=gpt-4o-mini
-
-# Processing Tuning
 MEMLOADER_CONFIDENCE_THRESHOLD=0.7
 MEMLOADER_BATCH_SIZE=100
-MEMLOADER_CHUNK_SIZE=1500
-
-# Timeout Settings (for large datasets)
-MEMLOADER_OLLAMA_TIMEOUT=600  # 10 minutes for large conversations
+MEMLOADER_OLLAMA_TIMEOUT=600
 ```
 
 ## 🔍 Troubleshooting

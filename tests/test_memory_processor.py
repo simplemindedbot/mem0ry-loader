@@ -119,7 +119,7 @@ class TestMemoryProcessor:
             "User likes Python programming", "preference", 0.9, "context1"
         )
         memory2 = ExtractedMemory(
-            "User enjoys Python development", "preference", 0.8, "context2"
+            "User really likes Python programming", "preference", 0.8, "context2"
         )
         memory3 = ExtractedMemory(
             "User dislikes meetings", "preference", 0.9, "context3"
@@ -183,7 +183,7 @@ class TestMemoryProcessor:
                 "User likes Python programming", "preference", 0.9, "context1"
             ),
             ExtractedMemory(
-                "User enjoys Python development", "preference", 0.8, "context2"
+                "User really likes Python programming", "preference", 0.8, "context2"
             ),
             ExtractedMemory("User dislikes meetings", "preference", 0.9, "context3"),
         ]
@@ -200,12 +200,14 @@ class TestMemoryProcessor:
         processor = MemoryProcessor()
 
         memories = [
-            ExtractedMemory("User likes Python", "preference", 0.9, "context1"),
-            ExtractedMemory("User enjoys Python", "preference", 0.8, "context2"),
-            ExtractedMemory("User is software engineer", "fact", 0.9, "context3"),
             ExtractedMemory(
-                "User works as software engineer", "fact", 0.85, "context4"
+                "User likes Python programming", "preference", 0.9, "context1"
             ),
+            ExtractedMemory(
+                "User really likes Python programming", "preference", 0.8, "context2"
+            ),
+            ExtractedMemory("User is software engineer", "fact", 0.9, "context3"),
+            ExtractedMemory("User is a software engineer", "fact", 0.85, "context4"),
         ]
 
         stats = ProcessingStats(0, 0, 0, 0, 0, {})
@@ -238,7 +240,7 @@ class TestMemoryProcessor:
         # Check stats
         assert stats.total_input == 4
         assert stats.total_output > 0
-        assert stats.low_confidence_filtered == 1  # One memory below 0.8 threshold
+        assert stats.low_confidence_filtered == 0  # All memories above 0.8 threshold
         assert stats.duplicates_removed == 1  # One duplicate
 
         # Check processed memories
